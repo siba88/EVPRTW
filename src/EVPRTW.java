@@ -13,7 +13,7 @@ public class EVPRTW {
 	public static void main(String[] args) {
 		
 		try {
-			BufferedReader br = new BufferedReader(new FileReader("evrptw_otl_instances/rc105.txt"));
+			BufferedReader br = new BufferedReader(new FileReader("evrptw_otl_instances/c103.txt"));
 			String line = br.readLine();
 			
 			EVRPTWInstance instance = new EVRPTWInstance();

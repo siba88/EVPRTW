@@ -227,7 +227,7 @@ public class CustomerInsertion {
 				 * System.out.println("Unfeasible node");
 				 */
 			} else {
-				double currentMetric = 2*distance + readyInterval + timeUrgency;
+				double currentMetric = distance + readyInterval + timeUrgency;
 				if (currentMetric < bestMetric || bestMetric == -1) {
 					bestMetric = currentMetric;
 					bestNeighbour = checkNode;
