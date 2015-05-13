@@ -13,7 +13,7 @@ public class EVPRTW {
 	public static void main(String[] args) {
 		
 		try {
-			BufferedReader br = new BufferedReader(new FileReader("evrptw_otl_instances/c103.txt"));
+			BufferedReader br = new BufferedReader(new FileReader("evrptw_otl_instances/r101.txt"));
 			String line = br.readLine();
 			
 			EVRPTWInstance instance = new EVRPTWInstance();
@@ -36,7 +36,9 @@ public class EVPRTW {
 					 instance.setDepot(node);
 				 }
 				 if(node.getType().equals("f")){
-					 instance.addStation(node);
+					 if(!(node.getxCoordinate().equals(instance.getDepot().getxCoordinate()) && node.getyCoordinate().equals(instance.getDepot().getyCoordinate()))){
+						 instance.addStation(node);
+					 }
 				 }
 				 if(node.getType().equals("c")){
 					 instance.addCustomer(node);
@@ -55,7 +57,7 @@ public class EVPRTW {
 			 double refueling = Double.valueOf(line.substring(26, line.length()-1));
 			 instance.setRefueling(refueling);
 			 line = br.readLine();
-			 double velocity = Double.valueOf(line.substring(21, line.length()-1));
+			 double velocity = Double.valueOf(line.substring(20, line.length()-1));
 			 instance.setVelocity(velocity);
 			 
 			 EVRPTWAlgorithm algorithm = new EVRPTWAlgorithm(instance);

@@ -24,6 +24,7 @@ public class CustomerInsertion {
 		currentTime = instance.getDepot().getReadyTime();
 		unvisitedCustomers = instance.getCustomers();
 		stations = instance.getStations();
+		if(stations.get(0).getxCoordinate().equals(instance.getDepot().getxCoordinate()) && stations.get(0).getyCoordinate() == instance.getDepot().getyCoordinate()) stations.remove(0);
 		routes = new ArrayList<Route>();
 		fuelTank = instance.getTankCapacity();
 		fuelConsumption = instance.getFuelConsumption();
@@ -55,24 +56,16 @@ public class CustomerInsertion {
 					unvisitedCustomers.remove(neighbour);
 					if (unvisitedCustomers.isEmpty()) {
 						noCapacity = true;
-						route.addNode(instance.getDepot());
-						routes.add(route);
-
+						goToDepot(route);
 					}
 					currentNode = neighbour;
 				}
 				else if(route.getRoute().size()>1){
-					if(!currentNode.getType().equals("f")){
-						findNearestStation();
-					}
-					else {
-						noCapacity = true;
-						route.getRoute().remove(currentNode);
-						route.addNode(instance.getDepot());
-						routes.add(route);
-					}
+						Node station = findBestStation(currentNode, route);
+						addNode(station);
 				}
-			} else {
+			} else if(!unvisitedCustomers.isEmpty()){
+				//goToDepot(route);
 				route.addNode(instance.getDepot());
 				routes.add(route);
 				noCapacity = true;
@@ -83,12 +76,35 @@ public class CustomerInsertion {
 			insertCustomers();
 		}
 	}
+	
+	public void addNode(Node neighbour) {
+		// System.out.println(neighbour);
+		fuelTank -= calculateDistanceBetweenPoints(neighbour, currentNode)
+				* instance.getFuelConsumption();
+		//System.out.println("Fuel consuption from node"+currentNode.getId()+"to "+neighbour.getId()+" tank:"+fuelTank);
+		currentTime += calculateDistanceBetweenPoints(neighbour, currentNode)
+				* instance.getVelocity();
+		if (currentTime < neighbour.getReadyTime())
+			currentTime = neighbour.getReadyTime();
+		currentTime += neighbour.getServiceTime();
+		load -= neighbour.getDemand();
+		if (neighbour.getType().equals("f")) {
+			currentTime += (instance.getTankCapacity() - fuelTank)
+					* instance.getRefueling();
+			fuelTank = instance.getTankCapacity();
+		} else if (neighbour.getType().equals("c")) {
+			unvisitedCustomers.remove(neighbour);
+		}
+		route.addNode(neighbour);
+		currentNode = neighbour;
 
-	private void findNearestStation() {
+	}
+
+	/*private void findNearestStation() {
 		Node nearestStation = null;
 		boolean stationFound = false;
+		double minimalLength = 0;
 		while (!stationFound) {
-			double minimalLength = 0;
 			for (int i = 0; i < stations.size(); i++) {
 				double length = calculateDistanceBetweenPoints(currentNode,
 						stations.get(i));
@@ -97,7 +113,9 @@ public class CustomerInsertion {
 					minimalLength = length;
 				}
 			}
-			if (fuelTank - minimalLength * fuelConsumption > 0) {
+		}
+			System.out.println(fuelTank);
+			if (fuelTank - (minimalLength * fuelConsumption) > 0) {
 				currentTime += (instance.getTankCapacity() - fuelTank)
 						* instance.getRefueling();
 				fuelTank = instance.getTankCapacity();
@@ -105,13 +123,60 @@ public class CustomerInsertion {
 				route.addNode(currentNode);
 				stationFound = true;
 			} else {
+				System.out.println(currentNode);
 				Node nodeBefore = route.getRoute().get(
-						route.getRoute().lastIndexOf(currentNode) - 1);
+						route.getRoute().size() - 2);
+				System.out.println(nodeBefore);
 				fuelTank += calculateDistanceBetweenPoints(currentNode,
-						nodeBefore);
+						nodeBefore)*instance.getFuelConsumption();
+				System.out.println(fuelTank);
+				currentTime-=calculateDistanceBetweenPoints(currentNode,
+						nodeBefore)*instance.getVelocity()+currentNode.getServiceTime();
 				route.getRoute().remove(currentNode);
 				unvisitedCustomers.add(currentNode);
+				if(nodeBefore.getType().equals("f")){
+					goToDepot();
+				}
+				else{
+					currentNode=nodeBefore;
+				}
 			}
+		
+	}*/
+	
+	public void removeLastNode(Route route) {
+		Node nodeBefore = route.getRoute().get(route.getRoute().size() - 2);
+		if (currentNode.getType().equals("c")) {
+			unvisitedCustomers.add(currentNode);
+		}
+		fuelTank += calculateDistanceBetweenPoints(nodeBefore, currentNode)
+				* instance.getFuelConsumption();
+		route.getRoute().remove(currentNode);
+		currentTime = route.getTime(instance);
+		currentNode = nodeBefore;
+	}
+	
+	public Node findBestStation(Node node, Route route) {
+		Node nearestStation = null;
+		double minimalLength = 0;
+		for (int i = 0; i < stations.size(); i++) {
+			double length = calculateDistanceBetweenPoints(node,
+					stations.get(i));
+			if (nearestStation == null || length < minimalLength) {
+				nearestStation = stations.get(i);
+				minimalLength = length;
+			}
+		}
+		if (fuelTank - minimalLength * instance.getFuelConsumption() > 0) {
+			/*System.out.println(currentNode);
+			System.out.println(nearestStation);
+			System.out.println(fuelTank);
+			System.out.println(minimalLength * instance.getFuelConsumption());*/
+			return nearestStation;
+
+		} else {
+			removeLastNode(route);
+			return findBestStation(currentNode, route);
 		}
 	}
 
@@ -209,6 +274,26 @@ public class CustomerInsertion {
 
 	public ArrayList<Route> getRoutes() {
 		return routes;
+	}
+	
+	public void goToDepot(Route route) {
+		if (currentTime
+				+ calculateDistanceBetweenPoints(currentNode,
+						instance.getDepot()) * instance.getVelocity() > instance
+				.getDepot().getDueDate()) {
+			removeLastNode(route);
+			goToDepot(route);
+		}
+		else if(fuelTank<calculateDistanceBetweenPoints(currentNode,
+				instance.getDepot())*instance.getFuelConsumption()){
+			Node station = findBestStation(currentNode, route);
+			addNode(station);
+			goToDepot(route);
+		}
+		else {
+			route.addNode(instance.getDepot());
+			routes.add(route);
+		}
 	}
 
 }
