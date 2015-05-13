@@ -56,10 +56,10 @@ public class Route {
 		return currentTime;
 	}
 	
-	public void checkTime(EVRPTWInstance instance){
+	public void validate(EVRPTWInstance instance){
 		double currentTime=0;
 		double currentEnergy = instance.getTankCapacity();
-		for(int i=0; i<route.size()-1; i++){
+		for(int i=0; i<route.size()-2; i++){
 			currentTime+=calculateDistanceBetweenPoints(route.get(i), route.get(i+1))*instance.getVelocity();
 			//System.out.println(instance.getVelocity());
 			if(currentTime<route.get(i).getReadyTime()){
@@ -84,7 +84,7 @@ public class Route {
 			if(currentEnergy<0){
 				//System.out.println(currentEnergy);
 				//System.out.println(calculateDistanceBetweenPoints(route.get(i), route.get(i+1)));
-				//System.out.println("Energy violation at node:"+route.get(i).getId());
+				System.out.println("Energy violation at node:"+route.get(i+1).getId());
 			}
 		}
 		

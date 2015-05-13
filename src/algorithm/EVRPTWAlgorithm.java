@@ -24,7 +24,7 @@ public class EVRPTWAlgorithm {
 		System.out.println(routesLength);
 		for(int i=0; i<routes.size(); i++){
 			System.out.println(routes.get(i));
-			//routes.get(i).checkTime(instance);
+			//routes.get(i).validate(instance);
 		}
 	}
 	

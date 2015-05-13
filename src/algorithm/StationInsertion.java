@@ -50,8 +50,12 @@ public class StationInsertion {
 									currentNode) * instance
 									.getFuelConsumption()) > 0) {
 						addNode(neighbour);
+						if (findBestNeighbour()==null) {
+							finishedRoute = true;
+							goToDepot(route);
+						}
 
-					} else {
+					} else if(route.getRoute().size()>1){
 						Node station = findBestStation(currentNode, route);
 						if (station == null) {
 							goToDepot(route);
@@ -62,7 +66,7 @@ public class StationInsertion {
 							addNode(station);
 						}
 					}
-				} else if (!unvisitedCustomers.isEmpty()) {
+				} else  {
 					goToDepot(route);
 					finishedRoute = true;
 				}
